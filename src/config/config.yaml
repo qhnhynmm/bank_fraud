@@ -1,0 +1,133 @@
+# Data Configuration
+data:
+  data_path: "data/CreditCardData.csv"  # Path to raw data
+  processed_dir: "data/processed"  # Directory for processed data
+  target_column: "Fraud"  # Name of the target column
+
+# Preprocessing Configuration
+preprocessing:
+  random_state: 42  # Random seed for reproducibility
+  test_size: 0.2
+  validation_size: 0.2
+  smote_ratio: 0.5  # Minority class will be increased to 50% of majority
+  undersampling_ratio: 0.8  # Keep 80% of majority class
+  
+  # Feature Engineering
+  time_features:
+    enabled: true
+    features: ["hour", "day_of_week", "is_weekend"]
+  
+  amount_features:
+    enabled: true
+    features: ["amount_log", "amount_bins"]
+  
+  # Missing Value Strategy
+  missing_values:
+    numerical: "median"
+    categorical: "mode"
+  
+  # Outlier Treatment
+  outliers:
+    method: "iqr"  # Options: iqr, zscore
+    threshold: 1.5  # IQR multiplier or z-score threshold
+
+# Model Configuration
+model:
+  # Model type: 'mlp', 'random_forest', 'xgboost', 'lightgbm'
+  type: "mlp"
+  
+  # Deep Learning Model (MLP) Configuration
+  mlp:
+    hidden_dims: [128, 64, 32]  # Hidden layer dimensions
+    dropout_rate: 0.3
+    activation: "relu"  # Activation function: relu, tanh, sigmoid
+    initialization: "xavier"  # Weight initialization method
+    learning_rate: 0.001
+    optimizer: "adam"  # adam, sgd, rmsprop
+    loss_function: "bce"  # Binary Cross Entropy
+    batch_size: 64
+    num_epochs: 50
+    early_stopping:
+      patience: 5
+      min_delta: 0.001
+    
+  # Random Forest Configuration
+  random_forest:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 2
+    min_samples_leaf: 1
+    max_features: "sqrt"
+    class_weight: "balanced"
+    random_state: 42
+    
+  # XGBoost Configuration
+  xgboost:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    min_child_weight: 1
+    gamma: 0
+    scale_pos_weight: 1
+    random_state: 42
+    
+  # LightGBM Configuration
+  lightgbm:
+    n_estimators: 100
+    max_depth: 6
+    learning_rate: 0.1
+    num_leaves: 31
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    min_child_samples: 20
+    scale_pos_weight: 1
+    random_state: 42
+
+# Training Configuration
+training:
+  batch_size: 64
+  
+  # Cross-validation settings
+  cv:
+    n_splits: 5
+    shuffle: true
+    random_state: 42
+  
+  # Early stopping settings
+  early_stopping:
+    monitor: "val_loss"  # Metric to monitor: val_loss, val_auc
+    patience: 5  # Number of epochs to wait before stopping
+    min_delta: 0.001  # Minimum change to qualify as an improvement
+    
+  # Model selection criteria
+  model_selection:
+    metric: "f1"  # Metric to use for model selection
+    greater_is_better: true
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/fraud_detection.log"
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - accuracy
+    - precision
+    - recall
+    - f1
+  threshold_optimization:
+    method: "f1"  # Metric to optimize threshold: f1, precision, recall
+    n_thresholds: 100  # Number of thresholds to evaluate
+
+# Inference Configuration
+inference:
+  test_file: "data/test.csv"  # Path to test data for inference
+  batch_size: 32
+  threshold: 0.5  # Default threshold for binary classification
+  save_predictions: true
+  output_dir: "predictions" 
