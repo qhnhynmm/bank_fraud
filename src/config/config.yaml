@@ -34,57 +34,14 @@ preprocessing:
 # Model Configuration
 model:
   # Model type: 'mlp', 'random_forest', 'xgboost', 'lightgbm'
-  type: "mlp"
+  type: "lightgbm"
   
   # Deep Learning Model (MLP) Configuration
   mlp:
     hidden_dims: [128, 64, 32]  # Hidden layer dimensions
     dropout_rate: 0.3
-    activation: "relu"  # Activation function: relu, tanh, sigmoid
-    initialization: "xavier"  # Weight initialization method
-    learning_rate: 0.001
-    optimizer: "adam"  # adam, sgd, rmsprop
-    loss_function: "bce"  # Binary Cross Entropy
-    batch_size: 64
-    num_epochs: 50
-    early_stopping:
-      patience: 5
-      min_delta: 0.001
-    
-  # Random Forest Configuration
-  random_forest:
-    n_estimators: 100
-    max_depth: 10
-    min_samples_split: 2
-    min_samples_leaf: 1
-    max_features: "sqrt"
-    class_weight: "balanced"
-    random_state: 42
-    
-  # XGBoost Configuration
-  xgboost:
-    n_estimators: 100
-    max_depth: 6
-    learning_rate: 0.1
-    subsample: 0.8
-    colsample_bytree: 0.8
-    min_child_weight: 1
-    gamma: 0
-    scale_pos_weight: 1
-    random_state: 42
-    
-  # LightGBM Configuration
-  lightgbm:
-    n_estimators: 100
-    max_depth: 6
-    learning_rate: 0.1
-    num_leaves: 31
-    feature_fraction: 0.8
-    bagging_fraction: 0.8
-    bagging_freq: 5
-    min_child_samples: 20
-    scale_pos_weight: 1
-    random_state: 42
+  
+  # Models already have good defaults in their factory classes
 
 # Training Configuration
 training:
@@ -127,7 +84,5 @@ evaluation:
 # Inference Configuration
 inference:
   test_file: "data/test.csv"  # Path to test data for inference
-  batch_size: 32
   threshold: 0.5  # Default threshold for binary classification
-  save_predictions: true
   output_dir: "predictions" 

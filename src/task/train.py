@@ -56,15 +56,17 @@ class ModelTrainer:
         logger.info(f"Creating {model_type} model")
         
         if model_type == 'mlp':
-            model_config = {
-                'input_dim': self.input_dim,
-                'hidden_dims': self.config['model']['mlp']['hidden_dims'],
-                'dropout_rate': self.config['model']['mlp']['dropout_rate']
-            }
-            return create_mlp_model(model_config).to(self.device)
+            # Sử dụng thông số mặc định từ hàm create_mlp_model
+            return create_mlp_model(
+                input_dim=self.input_dim,
+                hidden_dims=[128, 64, 32],  # Thông số mặc định
+                dropout_rate=0.3,
+                activation='relu',
+                initialization='xavier'
+            ).to(self.device)
         else:
-            model_params = self.config['model'][model_type]
-            return ModelFactory.create_model(model_type, model_params)
+            # Gọi trực tiếp đến các class model với tham số mặc định
+            return ModelFactory.create_model(model_type)
     
     def train_deep_learning_model(self, X_train: np.ndarray, X_val: np.ndarray, X_test: np.ndarray,
                           y_train: np.ndarray, y_val: np.ndarray, y_test: np.ndarray) -> nn.Module:
@@ -84,13 +86,14 @@ class ModelTrainer:
         criterion = nn.BCELoss()
         optimizer = optim.Adam(
             model.parameters(),
-            lr=self.config['model']['mlp']['learning_rate']
+            lr=0.001  # Thông số mặc định
         )
         
         # Training loop
         best_model_state = None
         best_val_metrics = None
-        num_epochs = self.config['model']['mlp']['num_epochs']
+        num_epochs = 50  # Thông số mặc định
+        patience = 5     # Thông số mặc định
         
         logger.info(f"Starting training for {num_epochs} epochs")
         for epoch in range(num_epochs):
@@ -118,7 +121,7 @@ class ModelTrainer:
                 logger.info(f"Saved best model to {model_path}")
             else:
                 self.patience_counter += 1
-                if self.patience_counter >= self.config['model']['mlp']['early_stopping']['patience']:
+                if self.patience_counter >= patience:
                     logger.info("Early stopping triggered")
                     break
         

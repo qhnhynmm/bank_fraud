@@ -46,13 +46,18 @@ class ModelInference:
             if not os.path.exists(model_path):
                 raise FileNotFoundError(f"Model file not found at {model_path}")
             
-            # Create model with same configuration
-            model_config = {
-                'input_dim': self.pipeline.get_feature_dim(),
-                'hidden_dims': self.config['model']['mlp']['hidden_dims'],
-                'dropout_rate': self.config['model']['mlp']['dropout_rate']
-            }
-            self.model = create_mlp_model(model_config)
+            # Create model with same configuration - FIX: Pass parameters separately
+            input_dim = self.pipeline.get_feature_dim()
+            hidden_dims = self.config['model']['mlp']['hidden_dims'] 
+            dropout_rate = self.config['model']['mlp']['dropout_rate']
+            
+            # Create model with properly unpacked parameters
+            self.model = create_mlp_model(
+                input_dim=input_dim, 
+                hidden_dims=hidden_dims, 
+                dropout_rate=dropout_rate
+            )
+            
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.model.to(self.device)
             self.model.eval()

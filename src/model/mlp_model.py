@@ -1,7 +1,3 @@
-"""
-Multi-layer Perceptron model for fraud detection.
-"""
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -12,21 +8,32 @@ logger = logging.getLogger(__name__)
 class MLPClassifier(nn.Module):
     """Multi-layer Perceptron for binary classification."""
     
-    def __init__(self, config: dict):
+    def __init__(self, input_dim, hidden_dims=[128, 64, 32], dropout_rate=0.3, activation='relu'):
         """
         Initialize the MLP model.
         
         Args:
-            config: Model configuration dictionary containing:
-                - input_dim: Number of input features
-                - hidden_dims: List of hidden layer dimensions
-                - dropout_rate: Dropout probability
+            input_dim: Number of input features
+            hidden_dims: List of hidden layer dimensions, default [128, 64, 32]
+            dropout_rate: Dropout probability, default 0.3
+            activation: Activation function to use, default 'relu'
         """
         super(MLPClassifier, self).__init__()
         
-        self.input_dim = config['input_dim']
-        self.hidden_dims = config['hidden_dims']
-        self.dropout_rate = config.get('dropout_rate', 0.2)
+        self.input_dim = input_dim
+        self.hidden_dims = hidden_dims
+        self.dropout_rate = dropout_rate
+        
+        # Select activation function
+        if activation == 'relu':
+            self.activation = nn.ReLU()
+        elif activation == 'tanh':
+            self.activation = nn.Tanh()
+        elif activation == 'sigmoid':
+            self.activation = nn.Sigmoid()
+        else:
+            logger.warning(f"Unknown activation {activation}, using ReLU")
+            self.activation = nn.ReLU()
         
         # Build layers
         layers = []
@@ -37,7 +44,7 @@ class MLPClassifier(nn.Module):
             layers.extend([
                 nn.Linear(prev_dim, hidden_dim),
                 nn.BatchNorm1d(hidden_dim),
-                nn.ReLU(),
+                self.activation,
                 nn.Dropout(self.dropout_rate)
             ])
             prev_dim = hidden_dim
@@ -93,22 +100,35 @@ class MLPClassifier(nn.Module):
         with torch.no_grad():
             return self(x)
 
-def create_mlp_model(config: dict) -> MLPClassifier:
+def create_mlp_model(input_dim, hidden_dims=[128, 64, 32], dropout_rate=0.3, 
+                     activation='relu', initialization='xavier') -> MLPClassifier:
     """
     Factory function to create and initialize MLP model.
     
     Args:
-        config: Model configuration
+        input_dim: Number of input features
+        hidden_dims: List of hidden layer dimensions, default [128, 64, 32]
+        dropout_rate: Dropout probability, default 0.3
+        activation: Activation function to use, default 'relu'
+        initialization: Weight initialization method, default 'xavier'
         
     Returns:
         Initialized MLP model
     """
-    model = MLPClassifier(config)
+    model = MLPClassifier(input_dim, hidden_dims, dropout_rate, activation)
     
     # Initialize weights
-    for layer in model.modules():
-        if isinstance(layer, nn.Linear):
-            nn.init.xavier_uniform_(layer.weight)
-            nn.init.zeros_(layer.bias)
+    if initialization == 'xavier':
+        for layer in model.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.xavier_uniform_(layer.weight)
+                nn.init.zeros_(layer.bias)
+    elif initialization == 'kaiming':
+        for layer in model.modules():
+            if isinstance(layer, nn.Linear):
+                nn.init.kaiming_normal_(layer.weight)
+                nn.init.zeros_(layer.bias)
+    else:
+        logger.warning(f"Unknown initialization method {initialization}, using default")
     
     return model 
