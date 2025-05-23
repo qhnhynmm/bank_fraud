@@ -33,12 +33,19 @@ preprocessing:
 
 # Model Configuration
 model:
-  # Model type: 'mlp', 'random_forest', 'xgboost', 'lightgbm'
-  type: "lightgbm"
+  # Model type: 'mlp', 'cnn', 'random_forest', 'xgboost', 'lightgbm'
+  type: "cnn"
   
   # Deep Learning Model (MLP) Configuration
   mlp:
     hidden_dims: [128, 64, 32]  # Hidden layer dimensions
+    dropout_rate: 0.3
+  
+  # Convolutional Neural Network (CNN) Configuration
+  cnn:
+    num_filters: [64, 128, 64]  # Number of filters for each conv layer
+    kernel_sizes: [3, 3, 3]     # Kernel sizes for each conv layer
+    hidden_dims: [128, 64]      # Hidden layer dimensions for FC layers
     dropout_rate: 0.3
   
   # Models already have good defaults in their factory classes

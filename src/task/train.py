@@ -1,7 +1,3 @@
-"""
-Training script for fraud detection models.
-"""
-
 import os
 import torch
 import torch.nn as nn
@@ -14,6 +10,7 @@ import pandas as pd
 import scipy.sparse
 
 from src.model.mlp_model import create_mlp_model
+from src.model.cnn_model import create_cnn_model
 from src.model.ml_models import ModelFactory
 from src.pipelines.data_pipeline import BankingDataPipeline
 from src.metrics.metrics import FraudMetrics
@@ -61,6 +58,16 @@ class ModelTrainer:
                 input_dim=self.input_dim,
                 hidden_dims=[128, 64, 32],  # Thông số mặc định
                 dropout_rate=0.3,
+                activation='relu',
+                initialization='xavier'
+            ).to(self.device)
+        elif model_type == 'cnn':
+            return create_cnn_model(
+                input_dim=self.input_dim,
+                num_filters=self.config['model']['cnn']['num_filters'],
+                kernel_sizes=self.config['model']['cnn']['kernel_sizes'], 
+                hidden_dims=self.config['model']['cnn']['hidden_dims'],
+                dropout_rate=self.config['model']['cnn']['dropout_rate'],
                 activation='relu',
                 initialization='xavier'
             ).to(self.device)
@@ -185,6 +192,8 @@ class ModelTrainer:
         
         # Train based on model type
         if self.config['model']['type'] == 'mlp':
+            return self.train_deep_learning_model(X_train, X_val, X_test, y_train, y_val, y_test)
+        elif self.config['model']['type'] == 'cnn':
             return self.train_deep_learning_model(X_train, X_val, X_test, y_train, y_val, y_test)
         else:
             return self.train_ml_model(X_train, X_val, X_test, y_train, y_val, y_test)

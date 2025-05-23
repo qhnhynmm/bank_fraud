@@ -11,6 +11,7 @@ import pandas as pd
 
 from src.task.train import ModelTrainer
 from src.task.inference import ModelInference
+from src.task.lazy_model import LazyModelTrainer
 from src.pipelines.data_pipeline import BankingDataPipeline
 
 # Configure logging
@@ -130,7 +131,7 @@ def run_inference(config: Dict, data_path: str = None):
 def main():
     """Main function to run training and/or inference."""
     parser = argparse.ArgumentParser(description='Run fraud detection model training/inference')
-    parser.add_argument('--mode', type=str, choices=['train', 'inference', 'both'], 
+    parser.add_argument('--mode', type=str, choices=['train', 'inference', 'both', 'ensemble', 'lazy'], 
                        default='both', help='Mode to run')
     parser.add_argument('--config', type=str, default='src/config/config.yaml',
                        help='Path to config file')
@@ -152,11 +153,18 @@ def main():
         logger.info(f"Using model type: {args.model}")
     
     try:
-        if args.mode in ['train', 'both']:
+        if args.mode == 'lazy':
+            logger.info("Running LazyPredict to compare multiple models...")
+            lazy_trainer = LazyModelTrainer(config)
+            results = lazy_trainer.train()
+            logger.info(f"LazyPredict identified {results['best_model_name']} as the best model")
+        
+        elif args.mode in ['train', 'both']:
             model = train_model(config)
         
         if args.mode in ['inference', 'both']:
             run_inference(config, args.test_data)
+            
             
     except Exception as e:
         logger.error(f"Error occurred: {e}")

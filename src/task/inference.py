@@ -12,6 +12,7 @@ import joblib
 import scipy.sparse
 
 from src.model.mlp_model import create_mlp_model
+from src.model.cnn_model import create_cnn_model
 from src.pipelines.data_pipeline import BankingDataPipeline
 from src.metrics.metrics import FraudMetrics
 
@@ -61,6 +62,29 @@ class ModelInference:
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.model.to(self.device)
             self.model.eval()
+        elif model_type == 'cnn':
+            # Load CNN PyTorch model
+            model_path = os.path.join('checkpoints', f'best_model_{model_type}.pt')
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"Model file not found at {model_path}")
+            
+            # Create model with same configuration
+            input_dim = self.pipeline.get_feature_dim()
+            
+            # Create model with default CNN parameters
+            self.model = create_cnn_model(
+                input_dim=input_dim,
+                num_filters=self.config['model']['cnn']['num_filters'],
+                kernel_sizes=self.config['model']['cnn']['kernel_sizes'],
+                hidden_dims=self.config['model']['cnn']['hidden_dims'],
+                dropout_rate=self.config['model']['cnn']['dropout_rate'],
+                activation='relu',
+                initialization='xavier'
+            )
+            
+            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            self.model.to(self.device)
+            self.model.eval()
         else:
             # Load traditional ML model
             model_path = os.path.join('checkpoints', f'best_model_{model_type}.joblib')
@@ -92,6 +116,23 @@ class ModelInference:
             # Check if processed_data is a sparse matrix and convert to dense if needed
             if scipy.sparse.issparse(processed_data):
                 logger.info("Converting sparse matrix to dense for PyTorch model")
+                processed_data = processed_data.toarray()
+            
+            processed_data = torch.FloatTensor(processed_data).to(self.device)
+            
+            with torch.no_grad():
+                predictions = self.model(processed_data)
+                
+            if return_proba:
+                return predictions.cpu().numpy().flatten()
+            else:
+                threshold = self.config['inference']['threshold']
+                return (predictions.cpu() >= threshold).numpy().flatten().astype(int)
+        elif self.config['model']['type'] == 'cnn':
+            # Convert to tensor for PyTorch CNN model
+            # Check if processed_data is a sparse matrix and convert to dense if needed
+            if scipy.sparse.issparse(processed_data):
+                logger.info("Converting sparse matrix to dense for PyTorch CNN model")
                 processed_data = processed_data.toarray()
             
             processed_data = torch.FloatTensor(processed_data).to(self.device)
