@@ -19,13 +19,13 @@ def load_config(config_path='src/config/config.yaml'):
 def train_and_compare():
     """Train both MLP and CNN models and compare their performance."""
     
-    print("Comparing MLP vs CNN for Fraud Detection")
+    print("Comparing MLP vs CNN vs LSTM for Fraud Detection")
     print("="*60)
     
     # Load base config
     config = load_config()
     
-    models_to_test = ['mlp', 'cnn']
+    models_to_test = ['mlp', 'cnn', 'lstm']
     results = {}
     
     for model_type in models_to_test:
@@ -72,6 +72,13 @@ def train_and_compare():
             model_path = f"checkpoints/best_model_{model_type}.pt"
             if os.path.exists(model_path):
                 print(f"  📁 Model saved: {model_path}")
+                
+                # Get model size
+                try:
+                    model_size = os.path.getsize(model_path) / (1024 * 1024)  # MB
+                    print(f"  📊 Model size: {model_size:.2f} MB")
+                except:
+                    pass
             else:
                 print("  ⚠️  Model file not found")
         else:

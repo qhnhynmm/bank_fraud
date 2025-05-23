@@ -11,6 +11,7 @@ import scipy.sparse
 
 from src.model.mlp_model import create_mlp_model
 from src.model.cnn_model import create_cnn_model
+from src.model.lstm_model import create_lstm_model
 from src.model.ml_models import ModelFactory
 from src.pipelines.data_pipeline import BankingDataPipeline
 from src.metrics.metrics import FraudMetrics
@@ -68,6 +69,17 @@ class ModelTrainer:
                 kernel_sizes=self.config['model']['cnn']['kernel_sizes'], 
                 hidden_dims=self.config['model']['cnn']['hidden_dims'],
                 dropout_rate=self.config['model']['cnn']['dropout_rate'],
+                activation='relu',
+                initialization='xavier'
+            ).to(self.device)
+        elif model_type == 'lstm':
+            return create_lstm_model(
+                input_dim=self.input_dim,
+                lstm_hidden_dims=self.config['model']['lstm']['lstm_hidden_dims'],
+                num_layers=self.config['model']['lstm']['num_layers'],
+                hidden_dims=self.config['model']['lstm']['hidden_dims'],
+                dropout_rate=self.config['model']['lstm']['dropout_rate'],
+                bidirectional=self.config['model']['lstm']['bidirectional'],
                 activation='relu',
                 initialization='xavier'
             ).to(self.device)
@@ -194,6 +206,8 @@ class ModelTrainer:
         if self.config['model']['type'] == 'mlp':
             return self.train_deep_learning_model(X_train, X_val, X_test, y_train, y_val, y_test)
         elif self.config['model']['type'] == 'cnn':
+            return self.train_deep_learning_model(X_train, X_val, X_test, y_train, y_val, y_test)
+        elif self.config['model']['type'] == 'lstm':
             return self.train_deep_learning_model(X_train, X_val, X_test, y_train, y_val, y_test)
         else:
             return self.train_ml_model(X_train, X_val, X_test, y_train, y_val, y_test)

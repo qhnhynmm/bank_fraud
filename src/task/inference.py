@@ -13,6 +13,7 @@ import scipy.sparse
 
 from src.model.mlp_model import create_mlp_model
 from src.model.cnn_model import create_cnn_model
+from src.model.lstm_model import create_lstm_model
 from src.pipelines.data_pipeline import BankingDataPipeline
 from src.metrics.metrics import FraudMetrics
 
@@ -85,6 +86,30 @@ class ModelInference:
             self.model.load_state_dict(torch.load(model_path, map_location=self.device))
             self.model.to(self.device)
             self.model.eval()
+        elif model_type == 'lstm':
+            # Load LSTM PyTorch model
+            model_path = os.path.join('checkpoints', f'best_model_{model_type}.pt')
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"Model file not found at {model_path}")
+            
+            # Create model with same configuration
+            input_dim = self.pipeline.get_feature_dim()
+            
+            # Create model with LSTM parameters from config
+            self.model = create_lstm_model(
+                input_dim=input_dim,
+                lstm_hidden_dims=self.config['model']['lstm']['lstm_hidden_dims'],
+                num_layers=self.config['model']['lstm']['num_layers'],
+                hidden_dims=self.config['model']['lstm']['hidden_dims'],
+                dropout_rate=self.config['model']['lstm']['dropout_rate'],
+                bidirectional=self.config['model']['lstm']['bidirectional'],
+                activation='relu',
+                initialization='xavier'
+            )
+            
+            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            self.model.to(self.device)
+            self.model.eval()
         else:
             # Load traditional ML model
             model_path = os.path.join('checkpoints', f'best_model_{model_type}.joblib')
@@ -133,6 +158,23 @@ class ModelInference:
             # Check if processed_data is a sparse matrix and convert to dense if needed
             if scipy.sparse.issparse(processed_data):
                 logger.info("Converting sparse matrix to dense for PyTorch CNN model")
+                processed_data = processed_data.toarray()
+            
+            processed_data = torch.FloatTensor(processed_data).to(self.device)
+            
+            with torch.no_grad():
+                predictions = self.model(processed_data)
+                
+            if return_proba:
+                return predictions.cpu().numpy().flatten()
+            else:
+                threshold = self.config['inference']['threshold']
+                return (predictions.cpu() >= threshold).numpy().flatten().astype(int)
+        elif self.config['model']['type'] == 'lstm':
+            # Convert to tensor for PyTorch LSTM model
+            # Check if processed_data is a sparse matrix and convert to dense if needed
+            if scipy.sparse.issparse(processed_data):
+                logger.info("Converting sparse matrix to dense for PyTorch LSTM model")
                 processed_data = processed_data.toarray()
             
             processed_data = torch.FloatTensor(processed_data).to(self.device)

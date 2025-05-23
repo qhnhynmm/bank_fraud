@@ -33,8 +33,8 @@ preprocessing:
 
 # Model Configuration
 model:
-  # Model type: 'mlp', 'cnn', 'random_forest', 'xgboost', 'lightgbm'
-  type: "cnn"
+  # Model type: 'mlp', 'cnn', 'lstm', 'random_forest', 'xgboost', 'lightgbm'
+  type: "lstm"
   
   # Deep Learning Model (MLP) Configuration
   mlp:
@@ -47,6 +47,14 @@ model:
     kernel_sizes: [3, 3, 3]     # Kernel sizes for each conv layer
     hidden_dims: [128, 64]      # Hidden layer dimensions for FC layers
     dropout_rate: 0.3
+  
+  # Long Short-Term Memory (LSTM) Configuration
+  lstm:
+    lstm_hidden_dims: [128, 64]  # Hidden dimensions for LSTM layers
+    num_layers: [2, 2]           # Number of layers for each LSTM stack
+    hidden_dims: [128, 64]       # Hidden layer dimensions for FC layers
+    dropout_rate: 0.3
+    bidirectional: true          # Use bidirectional LSTM
   
   # Models already have good defaults in their factory classes
 
